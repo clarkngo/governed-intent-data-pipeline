@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Interactive in-browser simulation of Governed Intent-Driven Data Engineering — an architectural framework for AI-assisted data pipelines across the analytics lifecycle, by Clark Jason Ngo." />
+  <title>GIDP Lab — Governed Intent-Driven Data Engineering</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M8 16.5L13 21.5L24 10.5' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./tour.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    /**
+     * Tailwind is loaded from CDN so this prototype stays a static GitHub Pages
+     * app with no build step. darkMode: 'class' is driven by <html class="dark">.
+     */
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Figtree", "ui-sans-serif", "system-ui", "sans-serif"],
+            display: ["Fraunces", "Georgia", "serif"],
+            mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+          },
+          colors: {
+            ink: {
+              50: "#f4f7fb",
+              100: "#e8eef6",
+              200: "#cfdbeb",
+              800: "#1c2433",
+              900: "#101722",
+              950: "#080c14",
+            },
+          },
+          boxShadow: {
+            glow: "0 0 0 1px rgba(45, 212, 191, 0.25), 0 18px 50px rgba(0,0,0,0.28)",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --ring: 13 148 136;
+    }
+    html, body { min-height: 100%; }
+    body { font-feature-settings: "ss01" on, "cv11" on; }
+    .font-display { font-optical-sizing: auto; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.35);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    .grid-bg {
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(45, 212, 191, 0.12), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 90% 0%, rgba(99, 102, 241, 0.12), transparent 45%);
+    }
+    .dark .grid-bg {
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% -10%, rgba(45, 212, 191, 0.10), transparent 50%),
+        radial-gradient(ellipse 50% 40% at 95% 0%, rgba(99, 102, 241, 0.14), transparent 45%),
+        linear-gradient(#080c14, #080c14);
+    }
+    .stage-dot { transition: background-color 240ms ease, box-shadow 240ms ease, transform 240ms ease; }
+    .stage-dot.is-active { box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.22); transform: scale(1.08); }
+    .log-enter { animation: logIn 320ms ease-out; }
+    @keyframes logIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+    .guard-enter { animation: guardIn 380ms cubic-bezier(.2,.8,.2,1); }
+    @keyframes guardIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: none; }
+    }
+    .scanline {
+      background: linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.35), transparent);
+      animation: scan 2.4s linear infinite;
+    }
+    @keyframes scan {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(400%); }
+    }
+    .mono-scroll { scrollbar-gutter: stable; }
+    kbd {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 0.3rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(148, 163, 184, 0.08);
+    }
+  </style>
+</head>
+<body class="grid-bg bg-ink-50 text-slate-800 antialiased dark:bg-ink-950 dark:text-slate-100" data-page="lab">
+  <a href="#composer" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-teal-600 focus:px-3 focus:py-2 focus:text-white">Skip to composer</a>
+
+  <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+  <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-ink-950/80">
+    <div class="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+      <div class="flex min-w-0 items-center gap-3" data-tour="brand">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-white shadow-glow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+        </div>
+        <div class="min-w-0">
+          <p class="truncate font-display text-[1.05rem] leading-tight text-slate-900 dark:text-white">GIDP Lab</p>
+          <p class="truncate text-[11px] tracking-wide text-slate-500 dark:text-slate-400">Governed Intent-Driven Data Engineering · simulation</p>
+        </div>
+      </div>
+
+      <div class="ml-auto flex flex-wrap items-center gap-2">
+        <div class="hidden items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 lg:flex" id="engine-pill" title="In-browser query engine status">
+          <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" id="engine-dot"></span>
+          <span id="engine-label">Engine warming…</span>
+        </div>
+
+        <div class="relative">
+          <button type="button" id="tour-menu-btn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-ink-900 dark:text-slate-200 dark:hover:bg-white/5">Walkthroughs</button>
+          <div id="tour-menu" class="absolute right-0 z-40 mt-2 hidden w-80 space-y-1.5 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-white/10 dark:bg-ink-900"></div>
+        </div>
+        <a href="./docs.html" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-ink-900 dark:text-slate-200 dark:hover:bg-white/5">Knowledge base</a>
+
+        <div class="flex rounded-lg border border-slate-200 bg-white p-0.5 text-xs font-medium dark:border-white/10 dark:bg-ink-900" role="group" aria-label="Execution role" data-tour="role">
+          <button type="button" data-role="analyst" class="role-btn rounded-md px-3 py-1.5 text-teal-800 dark:text-teal-200" aria-pressed="true">Analyst</button>
+          <button type="button" data-role="admin" class="role-btn rounded-md px-3 py-1.5 text-slate-500 dark:text-slate-400" aria-pressed="false">Admin / DE</button>
+        </div>
+
+        <button type="button" id="theme-toggle" class="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-ink-900 dark:text-slate-300 dark:hover:bg-white/5" aria-label="Toggle color theme">
+          <svg id="icon-sun" class="hidden h-4 w-4 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 3v1.5M12 19.5V21M4.6 4.6l1.06 1.06M18.34 18.34l1.06 1.06M3 12h1.5M19.5 12H21M4.6 19.4l1.06-1.06M18.34 5.66l1.06-1.06"/></svg>
+          <svg id="icon-moon" class="block h-4 w-4 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-[1600px] px-4 py-5 sm:px-6">
+    <!-- Paper attribution + four-layer map -->
+    <section class="mb-5 rounded-2xl border border-slate-200/80 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.03] sm:p-5">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-3xl">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-400">Research prototype</p>
+          <h1 class="mt-1 font-display text-xl text-slate-900 dark:text-white sm:text-2xl">
+            An architectural framework for AI-assisted data pipelines across the analytics lifecycle
+          </h1>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            Clark Jason Ngo · Natural-language intent is compiled into a governed plan, evaluated against defense-in-depth guardrails, then executed in-browser with DuckDB-Wasm. No data leaves this tab.
+          </p>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-500">Least-privilege by default · PII stays classified · HITL on policy failure</p>
+      </div>
+      <ol class="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" id="layer-strip" data-tour="layers">
+        <li class="layer-chip rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-white/10 dark:bg-ink-900" data-layer="input">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">01 · Interaction</p>
+          <p class="text-sm font-semibold">Intent composer</p>
+        </li>
+        <li class="layer-chip rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-white/10 dark:bg-ink-900" data-layer="plan">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">02 · Planning &amp; policy</p>
+          <p class="text-sm font-semibold">Guardrail compiler</p>
+        </li>
+        <li class="layer-chip rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-white/10 dark:bg-ink-900" data-layer="exec">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">03 · Execution</p>
+          <p class="text-sm font-semibold">In-browser DuckDB</p>
+        </li>
+        <li class="layer-chip rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-white/10 dark:bg-ink-900" data-layer="audit">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">04 · Observability</p>
+          <p class="text-sm font-semibold">Audit &amp; lineage</p>
+        </li>
+      </ol>
+    </section>
+
+    <div class="grid items-start gap-5 xl:grid-cols-12">
+      <!-- ── Layer 1: User Interaction ──────────────────────────────────── -->
+      <section id="composer" class="xl:col-span-4 space-y-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-ink-900/80 sm:p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Intent composer</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Templates compile more reliably than free-form prompts. Role is bound before planning.</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-800 dark:bg-teal-400/10 dark:text-teal-300" id="role-badge">Analyst · least privilege</span>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-1.5" id="template-list" role="list" data-tour="templates"></div>
+
+          <label for="prompt-input" class="mt-4 block text-xs font-medium text-slate-600 dark:text-slate-300">Natural-language intent</label>
+          <textarea id="prompt-input" data-tour="prompt" rows="5" class="mt-1 w-full resize-y rounded-xl border border-slate-200 bg-ink-50 px-3 py-2 font-mono text-[12.5px] leading-relaxed text-slate-800 outline-none ring-teal-600/30 focus:ring-2 dark:border-white/10 dark:bg-black/30 dark:text-slate-100" placeholder="Describe the analytical outcome, datasets, and privacy constraints…"></textarea>
+
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button type="button" id="run-btn" data-tour="run" class="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50">
+              Compile &amp; execute
+              <span class="hidden sm:inline text-teal-100"><kbd>⌘</kbd>/<kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
+            </button>
+            <button type="button" id="reset-btn" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5">Reset</button>
+            <label class="ml-auto flex items-center gap-1.5 text-[11px] text-slate-500">
+              <span>Pace</span>
+              <select id="speed-select" class="rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[11px] dark:border-white/10 dark:bg-ink-950">
+                <option value="demo">Demo</option>
+                <option value="fast">Fast</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- Catalog & classification -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-ink-900/80 sm:p-5" data-tour="catalog">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold">Governed catalog</h2>
+            <span class="text-[11px] text-slate-500" id="catalog-counts">—</span>
+          </div>
+          <p class="mt-1 text-xs text-slate-500">Column classification is evaluated before any SQL is allowed to project a field. Restricted attributes never leave the execution sandbox.</p>
+          <div class="mt-3 overflow-x-auto" id="catalog-root"></div>
+        </div>
+
+        <!-- Policy pack (read-only, educational) -->
+        <details class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-ink-900/80 sm:p-5">
+          <summary class="cursor-pointer text-sm font-semibold">Active policy pack</summary>
+          <pre class="mono-scroll mt-3 max-h-56 overflow-auto rounded-xl bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-teal-100"># gidp.policy.v1 — evaluated on every compile
+identity:
+  analyst: [SELECT, AGGREGATE]
+  admin:   [SELECT, AGGREGATE, APPROVE_HITL]
+catalog:
+  approved_for_analytics: [subscriptions, support_tickets]
+  join_only_non_pii:      [customers.region, customers.customer_id, customers.status]
+  restricted:             [customers.ssn]          # never overridable
+  confidential_pii:       [customers.email, customers.name]
+tools:
+  allow: [duckdb.select, duckdb.aggregate, artifact.publish]
+  deny:  [export.raw, copy_to, ddl, dml, external_http]
+injection:
+  block: [ignore_policies, bypass_guardrails, jailbreak]
+quotas:
+  max_rows_returned: 5000
+  max_compile_per_session: 40
+quality:
+  require: [row_count > 0, no_pii_in_projection, retention_pct in 0..100]</pre>
+        </details>
+      </section>
+
+      <!-- ── Layers 2–3: Plan, guardrails, execution ─────────────────────── -->
+      <section class="xl:col-span-8 space-y-4">
+        <!-- Stage stepper -->
+        <nav aria-label="Pipeline stages" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-ink-900/80" data-tour="stages">
+          <ol class="flex flex-wrap items-center gap-2 text-[11px] font-medium sm:gap-3" id="stage-stepper">
+            <li data-stage="plan" class="flex items-center gap-2"><span class="stage-dot h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>Structured plan</li>
+            <li class="hidden text-slate-300 sm:inline dark:text-slate-700">→</li>
+            <li data-stage="guard" class="flex items-center gap-2"><span class="stage-dot h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>Guardrails</li>
+            <li class="hidden text-slate-300 sm:inline dark:text-slate-700">→</li>
+            <li data-stage="sql" class="flex items-center gap-2"><span class="stage-dot h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>Compiled SQL</li>
+            <li class="hidden text-slate-300 sm:inline dark:text-slate-700">→</li>
+            <li data-stage="exec" class="flex items-center gap-2"><span class="stage-dot h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>Execute</li>
+            <li class="hidden text-slate-300 sm:inline dark:text-slate-700">→</li>
+            <li data-stage="quality" class="flex items-center gap-2"><span class="stage-dot h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>Quality</li>
+            <li class="hidden text-slate-300 sm:inline dark:text-slate-700">→</li>
+            <li data-stage="artifact" class="flex items-center gap-2"><span class="stage-dot h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>Artifact</li>
+          </ol>
+          <div class="relative mt-3 h-0.5 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+            <div id="stage-bar" class="h-full w-0 bg-teal-500 transition-all duration-500"></div>
+            <div class="scanline pointer-events-none absolute inset-y-0 left-0 hidden w-1/4" id="stage-scan"></div>
+          </div>
+        </nav>
+
+        <div id="live-banner" data-tour="banner" class="hidden rounded-xl border px-3 py-2 text-sm"></div>
+
+        <div class="grid gap-4 lg:grid-cols-2">
+          <!-- Structured plan -->
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900/80" data-tour="plan">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold">Structured plan</h2>
+              <span class="text-[10px] uppercase tracking-wider text-slate-400" id="plan-id">idle</span>
+            </div>
+            <dl class="mt-3 space-y-2 text-sm" id="plan-fields">
+              <p class="text-xs text-slate-500">Compile an intent to deconstruct it into target datasets, identity, risk, transformations, and quality checks.</p>
+            </dl>
+          </article>
+
+          <!-- Guardrails -->
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900/80" data-tour="guardrails">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold">Defense-in-depth guardrails</h2>
+              <span class="text-[10px] uppercase tracking-wider text-slate-400">pass / fail / clarify</span>
+            </div>
+            <ul class="mt-3 space-y-2" id="guardrail-list">
+              <li class="text-xs text-slate-500">Identity, injection, catalog, and tool-allowlist checks run before the warehouse session is opened.</li>
+            </ul>
+          </article>
+        </div>
+
+        <!-- SQL + results -->
+        <article class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900/80" data-tour="sql">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-sm font-semibold">Compiled DuckDB SQL</h2>
+            <p class="text-[11px] text-slate-500" id="sql-meta">PII columns are never projected. Joins to <code>customers</code> are limited to non-PII attributes.</p>
+          </div>
+          <pre id="sql-view" class="mono-scroll mt-3 max-h-56 overflow-auto rounded-xl bg-slate-950 p-3 font-mono text-[11.5px] leading-relaxed text-slate-200">-- Waiting for a compiled plan.</pre>
+        </article>
+
+        <div class="grid gap-4 lg:grid-cols-5">
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900/80 lg:col-span-3" data-tour="results">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold">Query result</h2>
+              <span class="text-[11px] text-slate-500" id="result-meta">No rows yet</span>
+            </div>
+            <div class="mt-3 overflow-x-auto" id="result-table">
+              <p class="text-xs text-slate-500">Approved aggregations render here. Raw PII never appears in this grid.</p>
+            </div>
+          </article>
+          <article class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900/80 lg:col-span-2">
+            <h2 class="text-sm font-semibold">Quality &amp; artifact</h2>
+            <ul class="mt-3 space-y-1.5 text-xs" id="quality-list">
+              <li class="text-slate-500">Checks run after execution and before an artifact is published.</li>
+            </ul>
+            <div id="artifact-card" class="mt-4 rounded-xl border border-dashed border-slate-300 p-3 text-xs text-slate-500 dark:border-white/15">
+              Artifact unpublished.
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── Layer 4: Audit & lineage ──────────────────────────────────────── -->
+    <section id="audit" data-tour="audit" class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-ink-900/80 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm font-semibold">Audit &amp; lineage console</h2>
+          <p class="text-xs text-slate-500">Every compile is an immutable event: role, plan, guardrails, SQL, quality, artifact.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="hidden cursor-pointer rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-400/10 dark:text-amber-300" id="pending-pill" title="Open the queued HITL request as Admin / DE"></span>
+          <button type="button" id="clear-audit" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">Clear session log</button>
+        </div>
+      </div>
+      <div class="mt-3 overflow-x-auto">
+        <table class="min-w-full text-left text-xs">
+          <thead class="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500 dark:border-white/10">
+            <tr>
+              <th class="py-2 pr-3 font-medium">Time</th>
+              <th class="py-2 pr-3 font-medium">Role</th>
+              <th class="py-2 pr-3 font-medium">Decision</th>
+              <th class="py-2 pr-3 font-medium">Guardrails</th>
+              <th class="py-2 pr-3 font-medium">SQL / quality</th>
+              <th class="py-2 font-medium">Artifact</th>
+            </tr>
+          </thead>
+          <tbody id="audit-body" class="divide-y divide-slate-100 dark:divide-white/5">
+            <tr><td colspan="6" class="py-6 text-center text-slate-500">No events yet. Compile an intent to start the lineage trail.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mx-auto max-w-[1600px] px-4 pb-10 text-[11px] text-slate-500 sm:px-6">
+    In-browser simulation of the GIDP control plane. Mock identifiers (email, SSN) are synthetic. DuckDB-Wasm executes locally; if workers are unavailable the lab falls back to an equivalent in-memory engine so the demonstration remains complete.
+  </footer>
+
+  <!-- HITL modal -->
+  <div id="hitl-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="hitl-title">
+    <div class="w-full max-w-lg rounded-2xl border border-white/10 bg-white p-5 shadow-2xl dark:bg-ink-900" data-tour="hitl">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-600">Human-in-the-loop</p>
+      <h3 id="hitl-title" class="mt-1 font-display text-xl text-slate-900 dark:text-white">Policy block requires review</h3>
+      <p id="hitl-body" class="mt-2 text-sm text-slate-600 dark:text-slate-300"></p>
+      <label for="hitl-justification" class="mt-4 block text-xs font-medium">Justification (required for break-glass)</label>
+      <textarea id="hitl-justification" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 bg-ink-50 px-3 py-2 font-mono text-xs dark:border-white/10 dark:bg-black/30" placeholder="Why is an override being requested, and what residual risk is accepted?"></textarea>
+      <p class="mt-2 text-[11px] text-slate-500">Restricted columns (<code>ssn</code>) remain non-overridable even under break-glass. Defense-in-depth still strips them from any approved projection.</p>
+      <div class="mt-4 flex flex-wrap justify-end gap-2">
+        <button type="button" id="hitl-cancel" class="rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-white/10">Dismiss</button>
+        <button type="button" id="hitl-escalate" class="rounded-xl bg-slate-800 px-3 py-2 text-sm font-medium text-white dark:bg-slate-100 dark:text-slate-900">Escalate to Data Engineer</button>
+        <button type="button" id="hitl-approve" class="hidden rounded-xl bg-amber-500 px-3 py-2 text-sm font-semibold text-amber-950">Break-glass approve</button>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    DuckDB-Wasm is an ES module. We attach it to window so the classic app.js
+    (which works from GitHub Pages and local static servers) can consume it.
+  -->
+  <script type="module">
+    try {
+      const duckdb = await import("https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm");
+      window.__GIDP_DUCKDB__ = duckdb;
+      window.dispatchEvent(new Event("gidp-duckdb-ready"));
+    } catch (err) {
+      console.warn("DuckDB-Wasm module failed to load; JS engine fallback will be used.", err);
+      window.__GIDP_DUCKDB_ERROR__ = err;
+      window.dispatchEvent(new Event("gidp-duckdb-failed"));
+    }
+  </script>
+  <script src="./app.js" defer></script>
+  <script src="./tour.js" defer></script>
+</body>
+</html>
