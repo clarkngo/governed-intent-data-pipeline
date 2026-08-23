@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Knowledge base for Governed Intent-Driven Data Engineering — architecture, guardrails, catalog policy, and lab walkthroughs." />
+  <title>Knowledge base — GIDP Lab</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M8 16.5L13 21.5L24 10.5' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./tour.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Figtree", "ui-sans-serif", "system-ui", "sans-serif"],
+            display: ["Fraunces", "Georgia", "serif"],
+            mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+          },
+          colors: {
+            ink: { 50: "#f4f7fb", 100: "#e8eef6", 200: "#cfdbeb", 800: "#1c2433", 900: "#101722", 950: "#080c14" },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html, body { min-height: 100%; }
+    body { font-feature-settings: "ss01" on, "cv11" on; }
+    .prose-gidp h2 { scroll-margin-top: 5.5rem; }
+    .toc a.is-active { color: #0f766e; font-weight: 650; }
+    .dark .toc a.is-active { color: #5eead4; }
+  </style>
+</head>
+<body class="bg-ink-50 text-slate-800 antialiased dark:bg-ink-950 dark:text-slate-100" data-page="docs">
+  <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-ink-950/80">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+      <a href="./index.html" class="flex min-w-0 items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-white" aria-hidden="true">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+        </div>
+        <div class="min-w-0">
+          <p class="font-display text-[1.05rem] leading-tight text-slate-900 dark:text-white">GIDP knowledge base</p>
+          <p class="text-[11px] text-slate-500">Framework notes · walkthroughs · policy pack</p>
+        </div>
+      </a>
+      <div class="ml-auto flex flex-wrap items-center gap-2">
+        <a href="./index.html" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-ink-900 dark:text-slate-200">Open lab</a>
+        <div class="relative">
+          <button type="button" id="tour-menu-btn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-ink-900 dark:text-slate-200">Walkthroughs</button>
+          <div id="tour-menu" class="absolute right-0 z-40 mt-2 hidden w-80 space-y-1.5 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-white/10 dark:bg-ink-900"></div>
+        </div>
+        <button type="button" id="docs-theme" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-ink-900 dark:text-slate-200">Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+    <aside class="toc hidden lg:block">
+      <p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">On this page</p>
+      <nav class="mt-3 space-y-2 text-sm text-slate-500">
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#overview">Overview</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#architecture">Architecture</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#compiler">Intent compiler</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#guardrails">Guardrails</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#catalog">Catalog &amp; classification</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#roles">Roles</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#hitl">Human-in-the-loop</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#execution">Execution sandbox</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#quality">Quality &amp; artifacts</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#audit">Audit &amp; lineage</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#threats">Threat model</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#walkthroughs">Walkthroughs</a>
+        <a class="block hover:text-teal-700 dark:hover:text-teal-300" href="#glossary">Glossary</a>
+      </nav>
+    </aside>
+
+    <article class="prose-gidp space-y-10">
+      <section id="overview" data-tour="docs-hero">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-400">Research notes</p>
+        <h1 class="mt-1 font-display text-3xl text-slate-900 dark:text-white">Governed Intent-Driven Data Engineering</h1>
+        <p class="mt-3 max-w-3xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          This knowledge base accompanies the in-browser lab for
+          <em>Governed Intent-Driven Data Engineering: An Architectural Framework for AI-Assisted Data Pipelines Across the Analytics Lifecycle</em>
+          by Clark Jason Ngo. The prototype is not a chatbot bolted onto a warehouse. It is a control plane: natural language is compiled into a structured plan, checked against stacked guardrails, then executed only if policy allows.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" class="rounded-xl bg-teal-600 px-3 py-2 text-sm font-semibold text-white" data-start-tour="docs-guide">Start a guided reading</button>
+          <a href="./index.html?tour=anatomy" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-white/10">Tour the lab UI</a>
+        </div>
+      </section>
+
+      <section id="architecture" data-tour="docs-arch">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Four-layer architecture</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">Each compile walks the same path. Layers are separated so a helpful model cannot skip policy or rewrite the catalog.</p>
+        <ol class="mt-4 grid gap-3 sm:grid-cols-2">
+          <li class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-400">01 · Interaction</p>
+            <p class="mt-1 text-sm font-semibold">Intent composer</p>
+            <p class="mt-1 text-xs leading-relaxed text-slate-500">Role is bound first. Templates and free-form prompts are captured before any SQL exists.</p>
+          </li>
+          <li class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-400">02 · Planning &amp; policy</p>
+            <p class="mt-1 text-sm font-semibold">Compiler + guardrails</p>
+            <p class="mt-1 text-xs leading-relaxed text-slate-500">The planner emits Intent, Datasets, Identity, Risk, Transformations, and Quality checks. Four independent verdicts run: identity, injection, catalog, tools.</p>
+          </li>
+          <li class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-400">03 · Execution</p>
+            <p class="mt-1 text-sm font-semibold">In-browser DuckDB</p>
+            <p class="mt-1 text-xs leading-relaxed text-slate-500">Only allowlisted SELECT/AGGREGATE SQL runs. PII columns are stripped in the compiled query, not as a post-filter.</p>
+          </li>
+          <li class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-ink-900">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-400">04 · Observability</p>
+            <p class="mt-1 text-sm font-semibold">Audit &amp; lineage</p>
+            <p class="mt-1 text-xs leading-relaxed text-slate-500">Every decision is an immutable event: who asked, what was planned, which checks fired, which SQL ran, which artifact shipped.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="compiler">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Intent compiler</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          The lab uses a deterministic compiler rather than a remote LLM so GitHub Pages can run offline-after-CDN and results stay reproducible. The contract is the same one an LLM planner would have to emit:
+        </p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-400">
+          <li><strong>Intent</strong> — analytical job type, grain, cadence, privacy constraint.</li>
+          <li><strong>Target datasets</strong> — named catalog objects, not “all tables.”</li>
+          <li><strong>Identity</strong> — role, least-privilege flag, permitted actions.</li>
+          <li><strong>Risk</strong> — low / medium / high / critical.</li>
+          <li><strong>Transformation logic</strong> — joins, aggregations, PII stripping.</li>
+          <li><strong>Quality checks</strong> — predicates that must hold before publish.</li>
+        </ul>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          Programs the compiler can emit: <code class="font-mono text-xs">retention_by_region</code>, <code class="font-mono text-xs">sla_by_region</code>, <code class="font-mono text-xs">clarify_scope</code>, <code class="font-mono text-xs">blocked_pii_export</code>, <code class="font-mono text-xs">blocked_injection</code>.
+          Hostile prompts never become COPY/EXPORT SQL.
+        </p>
+      </section>
+
+      <section id="guardrails" data-tour="docs-guard">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Defense-in-depth guardrails</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">Each check returns <em>pass</em>, <em>fail</em>, or <em>clarify</em>. SQL is dispatched only on an overall <em>allow</em>.</p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 dark:border-white/10">
+              <tr><th class="py-2 pr-4">Guardrail</th><th class="py-2 pr-4">Asks</th><th class="py-2">Typical fail</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-600 dark:divide-white/10 dark:text-slate-300">
+              <tr><td class="py-2 pr-4 font-medium">Identity / RBAC</td><td class="py-2 pr-4">Does this role have SELECT/AGGREGATE, and is PII in scope?</td><td class="py-2">Analyst requesting raw identifiers</td></tr>
+              <tr><td class="py-2 pr-4 font-medium">Prompt injection</td><td class="py-2 pr-4">Does the text try to mutate policy?</td><td class="py-2">“Ignore previous policies / bypass guardrails”</td></tr>
+              <tr><td class="py-2 pr-4 font-medium">Catalog</td><td class="py-2 pr-4">Are requested columns classified for this job?</td><td class="py-2">Projecting <code class="font-mono text-xs">ssn</code> or unbounded scans</td></tr>
+              <tr><td class="py-2 pr-4 font-medium">Tools &amp; quotas</td><td class="py-2 pr-4">Is the tool allowlisted, and is the session under quota?</td><td class="py-2">Raw CSV export, COPY TO, DDL/DML, HTTP</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="catalog" data-tour="docs-catalog">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Catalog &amp; classification</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">Classification is the source of truth. A join key is not a license to project PII from the same table.</p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 dark:border-white/10">
+              <tr><th class="py-2 pr-4">Class</th><th class="py-2 pr-4">Examples</th><th class="py-2">Rule</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-600 dark:divide-white/10 dark:text-slate-300">
+              <tr><td class="py-2 pr-4 font-medium">join_key</td><td class="py-2 pr-4 font-mono text-xs">customer_id</td><td class="py-2">Usable in JOIN / GROUP BY only</td></tr>
+              <tr><td class="py-2 pr-4 font-medium">internal</td><td class="py-2 pr-4 font-mono text-xs">region, plan, mrr, csat</td><td class="py-2">Approved analytics projections</td></tr>
+              <tr><td class="py-2 pr-4 font-medium">pii</td><td class="py-2 pr-4 font-mono text-xs">name, email</td><td class="py-2">Blocked for Analyst; HITL may still not dump them</td></tr>
+              <tr><td class="py-2 pr-4 font-medium">restricted</td><td class="py-2 pr-4 font-mono text-xs">ssn</td><td class="py-2">Never projected, never overridable</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-3 text-sm text-slate-600 dark:text-slate-400">Approved fact tables: <code class="font-mono text-xs">subscriptions</code>, <code class="font-mono text-xs">support_tickets</code>. <code class="font-mono text-xs">customers</code> is mixed — join for <code class="font-mono text-xs">region</code> only.</p>
+      </section>
+
+      <section id="roles">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Roles</h2>
+        <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600 dark:text-slate-400">
+          <li><strong>Analyst</strong> — least privilege. SELECT + AGGREGATE. Cannot approve HITL. PII exports block and may only escalate.</li>
+          <li><strong>Admin / Data Engineer</strong> — same SQL tools, plus <code class="font-mono text-xs">APPROVE_HITL</code>. Break-glass runs a <em>substitute</em> governed aggregate. It does not replay the blocked prompt and still strips SSN.</li>
+        </ul>
+      </section>
+
+      <section id="hitl" data-tour="docs-hitl">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Human-in-the-loop</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          HITL is a gate, not an override-everything switch. Analysts escalate with a written justification. Admins may approve. The control plane then compiles the approved retention program — not the original dump or jailbreak. Restricted columns remain non-overridable even under break-glass. That is the difference between “the model was helpful” and “the platform stayed governed.”
+        </p>
+      </section>
+
+      <section id="execution">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Execution sandbox</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          DuckDB-Wasm (1.29.0) loads mock <code class="font-mono text-xs">customers</code>, <code class="font-mono text-xs">subscriptions</code>, and <code class="font-mono text-xs">support_tickets</code> entirely in the tab. Identifiers are synthetic (<code class="font-mono text-xs">@example.invalid</code>, <code class="font-mono text-xs">000-00-1xxx</code>). If Wasm workers fail, an equivalent JavaScript engine runs the same aggregations so the demo still completes. No GPU, no warehouse credential, no outbound data plane.
+        </p>
+      </section>
+
+      <section id="quality">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Quality gates &amp; artifacts</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          After SQL returns, the lab checks row count, quota, absence of PII column names, retention in 0–100, CSAT in 1–5, and region completeness. Only then is a JSON/CSV artifact minted. A quality failure is a publish block, even if guardrails had allowed the session.
+        </p>
+      </section>
+
+      <section id="audit">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Audit &amp; lineage</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          The console stores timestamp, role, decision (<code class="font-mono text-xs">allow</code>, <code class="font-mono text-xs">block</code>, <code class="font-mono text-xs">clarify</code>, <code class="font-mono text-xs">escalated</code>, <code class="font-mono text-xs">allow_hitl</code>), guardrail vector, SQL, quality summary, and artifact link. A short session history is kept in <code class="font-mono text-xs">localStorage</code> key <code class="font-mono text-xs">gidp-lab-v1</code>.
+        </p>
+      </section>
+
+      <section id="threats">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Threat model (what the lab demonstrates)</h2>
+        <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600 dark:text-slate-400">
+          <li><strong>Prompt injection</strong> — policy-mutating text must not compile into executable SQL.</li>
+          <li><strong>Confused deputy</strong> — the planner must not inherit Admin powers because the prose sounds urgent.</li>
+          <li><strong>Classification bypass</strong> — joining <code class="font-mono text-xs">customers</code> for region must not leak email/ssn.</li>
+          <li><strong>Tool abuse</strong> — raw export / COPY / DDL are denied even if SELECT would have been allowed.</li>
+          <li><strong>Unbounded exploration</strong> — “show everything” is a clarify, not SELECT *.</li>
+        </ul>
+      </section>
+
+      <section id="walkthroughs" data-tour="docs-scenarios">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Walkthroughs</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          Each scenario is a click-through with Back / Next popups. Lab scenarios compile real plans against the mock warehouse. Use the Walkthroughs menu, or start from the cards below.
+        </p>
+        <p class="mt-2 text-xs text-slate-500">Keyboard: <kbd class="rounded border border-slate-300 px-1">←</kbd> <kbd class="rounded border border-slate-300 px-1">→</kbd> to step, <kbd class="rounded border border-slate-300 px-1">Esc</kbd> to skip.</p>
+        <div id="scenario-launchers" class="mt-4 grid gap-3 sm:grid-cols-2"></div>
+      </section>
+
+      <section id="glossary">
+        <h2 class="font-display text-2xl text-slate-900 dark:text-white">Glossary</h2>
+        <dl class="mt-3 space-y-3 text-sm">
+          <div><dt class="font-semibold">GIDP</dt><dd class="text-slate-600 dark:text-slate-400">Governed Intent-Driven Data Engineering — the control-plane pattern this lab simulates.</dd></div>
+          <div><dt class="font-semibold">HITL</dt><dd class="text-slate-600 dark:text-slate-400">Human-in-the-loop review. Authorization to run a safer substitute job, not to honor a blocked dump.</dd></div>
+          <div><dt class="font-semibold">Break-glass</dt><dd class="text-slate-600 dark:text-slate-400">Admin-only path with justification. Restricted class remains non-overridable.</dd></div>
+          <div><dt class="font-semibold">Clarify</dt><dd class="text-slate-600 dark:text-slate-400">Planning halt: the intent is too vague to authorize a warehouse session.</dd></div>
+        </dl>
+      </section>
+    </article>
+  </div>
+
+  <footer class="mx-auto max-w-6xl px-4 pb-10 text-[11px] text-slate-500 sm:px-6">
+    Static knowledge base for the GIDP Lab prototype. No data leaves the browser.
+  </footer>
+
+  <script src="./tour.js" defer></script>
+  <script>
+    (function () {
+      try {
+        var saved = JSON.parse(localStorage.getItem("gidp-lab-v1") || "{}");
+        if (saved.theme === "light") document.documentElement.classList.remove("dark");
+        else document.documentElement.classList.add("dark");
+      } catch (e) {
+        document.documentElement.classList.add("dark");
+      }
+      document.getElementById("docs-theme").addEventListener("click", function () {
+        var dark = document.documentElement.classList.toggle("dark");
+        try {
+          var saved = JSON.parse(localStorage.getItem("gidp-lab-v1") || "{}");
+          saved.theme = dark ? "dark" : "light";
+          localStorage.setItem("gidp-lab-v1", JSON.stringify(saved));
+        } catch (err) {}
+      });
+      document.querySelectorAll("[data-start-tour]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (window.GIDPTour) window.GIDPTour.start(btn.getAttribute("data-start-tour"));
+        });
+      });
+      var links = Array.prototype.slice.call(document.querySelectorAll(".toc a"));
+      var sections = links.map(function (a) {
+        return document.querySelector(a.getAttribute("href"));
+      });
+      function onScroll() {
+        var y = window.scrollY + 96;
+        var current = sections[0];
+        sections.forEach(function (sec) {
+          if (sec && sec.offsetTop <= y) current = sec;
+        });
+        links.forEach(function (a) {
+          a.classList.toggle("is-active", current && a.getAttribute("href") === "#" + current.id);
+        });
+      }
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>
