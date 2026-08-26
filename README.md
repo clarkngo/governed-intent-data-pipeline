@@ -4,6 +4,8 @@ Interactive, fully client-side simulation of **Governed Intent-Driven Data Engin
 
 Natural-language intent is compiled into a structured plan, evaluated against defense-in-depth guardrails, then executed in the browser with DuckDB-Wasm. No warehouse, GPU, or model API is required. Synthetic identifiers never leave this tab.
 
+Related control-plane lab: [GIDP Core Lab](https://clarkngo.github.io/gidp-core/)
+
 ## Run locally
 
 GitHub Pages (and any static server) is the intended host. DuckDB-Wasm needs HTTP(S) for workers; opening the file from disk may fall back to the in-memory JS engine.
